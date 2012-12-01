@@ -10,6 +10,16 @@ var shouldCapture = false;
 var snap = undefined;
 var found = false;
 var tracking = 0; // 0- center, 1 - left, 2 - right
+var vTracking = 0;
+var x = 0;
+var y = 0;
+
+//capture and store image
+var pngStream = client.createPngStream();
+pngStream.on('data', function(data) {
+  snap = data;
+});
+
 
 if (fly) {
   client.takeoff();
@@ -23,7 +33,7 @@ setTimeout(function() {
 setTimeout(function() {
   land();
   //process.exit();
-}, 30000);
+}, 40000);
 
 
 function takeoffSuccess() {
@@ -38,8 +48,9 @@ function takeoffSuccess() {
 
   setTimeout(function() {
     start();
-  }, 1500);
+  }, 2000);
 }
+
 
 function start() {
 
@@ -49,18 +60,18 @@ function start() {
 
   setInterval(function() {
   
-    detect(saveDetected);
-    saveImage();
+    detect();
 
-  }, 1000);
+  }, 700);
 
-  setInterval(function() {
-    track();
-  }, 1000);
+  // setInterval(function() {
+  //   track();
+  // }, 500);
 }
 
 function land() {
   client.land();
+  
 }
 
 ///TRACKING 
@@ -76,12 +87,12 @@ function track() {
       if (tracking == 1) {
 
         console.log('left');
-        client.counterClockwise(0.2);
+        client.counterClockwise(0.7);
 
       } else if (tracking == 2) {
 
         console.log('right');
-        client.clockwise(0.2);
+        client.clockwise(0.7);
 
       } else {
 
@@ -89,22 +100,35 @@ function track() {
 
       }
 
+      // if (vTracking == 1) {
+
+      //   console.log('up');
+      //   client.up(0.6);
+
+      // } else if (vTracking == 2) {
+
+      //   console.log('down');
+      //   client.down(0.6);
+
+      // } else {
+
+      //   console.log('vertically centered');
+
+      // }
+
       setTimeout(function() {
         client.stop();
-      }, 800);
+      }, 130);
     }
+
+    found = false;
+    tracking = 0;
+    vTracking = 0;
 
 }
 
 
 // //client.animateLeds("blinkOrange", 5, 2);
-
-//capture and store image
-var pngStream = client.createPngStream();
-pngStream.on('data', function(data) {
-  snap = data;
-});
-
 function saveImage() {
   if (!snap) {
     return;
@@ -115,13 +139,25 @@ function saveImage() {
   });
 }
 
+setInterval(function() {
+  saveImage();
+}, 100);
+
+
 //run script to detect 
-function detect(cb) {
+function detect() {
+
+  found = false;
   exec('node detect',
     function (error, stdout, stderr) {
-     
-      var features = JSON.parse(stdout);
       
+      var features = [];
+      try {
+        features = JSON.parse(stdout);
+      } catch(e) {
+        console.log("opencv error");
+      } 
+
       var falsePos = false;
       //make sure features are big and only 1
 
@@ -135,28 +171,44 @@ function detect(cb) {
 
         var f = features[i];
 
-        if (f.height < 80 && f.width < 80) {
+        if (f.height < 70 && f.width < 70) {
           features.splice(i, 1);
         } else {
 
-          if (f.x < 200) {
+          if (f.x < 230) {
             tracking = 1;
-          } else if (f.x > 300) {
+          } else if (f.x > 410) {
             tracking = 2;
           } else {
             tracking = 0;
           }
+
+          x = f.x;
+          console.log('x: ', x);
+
+          if (f.y < 60) {
+            vTracking = 2;
+          } else if (f.y > 300) {
+            vTracking = 1;
+          } else {
+            vTracking = 0;
+          }
+
+          y = f.y;
+          console.log('y: ', y);
         }
       }
 
       if (features && features.length && !falsePos) {
         //start tracking
         found = true;
-
-        cb(features);
+        track();
+        saveDetected(features);
       } else {
         found = false;
       }
+
+     
   });
 }
 
@@ -168,7 +220,7 @@ function saveDetected(features) {
       var f = features[i];
       //draw on it
       im.ellipse(f.x + f.width/2, f.y + f.height/2, f.width/2, f.height/2);     
-      console.log(f);
+
     }
 
     var date = new Date();
