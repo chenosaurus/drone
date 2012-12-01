@@ -35,7 +35,7 @@ setTimeout(function() {
 setTimeout(function() {
   land();
   //process.exit();
-}, 40000);
+}, 60000);
 
 
 function takeoffSuccess() {
@@ -89,22 +89,22 @@ function track() {
       if (tracking == 1) {
 
         console.log('left');
-        client.counterClockwise(0.4);
+        client.counterClockwise(0.3);
 
-      } else if (tracking = 3) {
+      } else if (tracking == 3) {
 
         console.log('hard left');
-        client.counterClockwise(0.7);
+        client.counterClockwise(0.5);
 
-      } else if (tracking = 4) {
+      } else if (tracking == 4) {
 
         console.log('hard right');
-        client.clockwise(0.7);
+        client.clockwise(0.5);
        
       } else if (tracking == 2) {
 
         console.log('right');
-        client.clockwise(0.4);
+        client.clockwise(0.3);
 
       } else {
 
@@ -183,24 +183,24 @@ function detect() {
 
         var f = features[i];
 
-        if (f.height < 70 && f.width < 70) {
+        if (f.height < 60 && f.width < 60) {
           features.splice(i, 1);
         } else {
 
           if (f.x < 190) {
             tracking = 3;
-          } else if (f.x < 230) {
+          } else if (f.x < 240) {
             tracking = 1;
           } else if (f.x > 440) {
             tracking = 4;
-          } else if (f.x > 410) {
+          } else if (f.x > 400) {
             tracking = 2;
           } else {
             tracking = 0;
           }
 
           x = f.x;
-          console.log('x: ', x);
+          console.log('x: ', x, 'tracking: ', tracking);
 
           if (f.y < 60) {
             vTracking = 2;
@@ -249,7 +249,7 @@ function saveDetected(features) {
     im.save(filename);
     snaps.push({file: filename});
 
-    client.animateLeds("blinkOrange", 5, 2);
+    client.animateLeds("blinkRed", 5, 1);
   });
 }
 
