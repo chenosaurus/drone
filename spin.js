@@ -4,11 +4,16 @@ var arDrone = require('ar-drone'),
     client  = arDrone.createClient(),
     exec    = require('child_process').exec;
 
+var fly = true;
+
 var shouldCapture = false;
 var snap = undefined;
 var found = false;
+var tracking = 0; // 0- center, 1 - left, 2 - right
 
-client.takeoff();
+if (fly) {
+  client.takeoff();
+}
 
 
 setTimeout(function() {
@@ -22,9 +27,14 @@ setTimeout(function() {
 
 
 function takeoffSuccess() {
-  client.stop();
+  if (fly) {
+    client.stop();
+  }
 
-  client.up(1);
+  setTimeout(function() {
+
+    client.up(.8);
+  }, 500);
 
   setTimeout(function() {
     startSteps();
@@ -32,11 +42,14 @@ function takeoffSuccess() {
 }
 
 function startSteps() {
-  client.stop();
+
+  if (fly) {
+    client.stop();
+  }
 
   setInterval(function() {
     step();
-  }, 2000);
+  }, 1000);
 }
 
 function land() {
@@ -45,19 +58,42 @@ function land() {
 
 
 function step() {
-  if (!found) {
-    client.clockwise(0.2);
+  if (!found && fly) {
+    //client.clockwise(0.2);
+  }
+
+  if (found) {
+    console.log('tracking');
+
+    client.animateLeds("blinkGreen", 5, 1);
+    if (tracking == 1) {
+      console.log('left');
+      client.counterClockwise(0.2);
+
+    } else if (tracking == 2) {
+      console.log('right');
+      client.clockwise(0.2);
+    } else {
+      console.log('centered');
+    }
+
+    setTimeout(function() {
+      client.stop();
+    }, 700);
   }
 
   setTimeout(function() {
 
-    client.stop();
+    if (!tracking) {    
+      client.stop();
+    }
 
     detect(saveDetected);
     saveImage();
 
   }, 1000);
 }
+
 
 
 // //client.animateLeds("blinkOrange", 5, 2);
@@ -85,8 +121,29 @@ function detect(cb) {
      
       var features = JSON.parse(stdout);
       
+      //make sure features are big
+      for (var i = features.length - 1; i >=0; i--) {
+
+        var f = features[i];
+
+        if (f.height < 80 && f.width < 80) {
+          features.splice(i, 1);
+        } else {
+
+          if (f.x < 180) {
+            tracking = 1;
+          } else if (f.x > 360) {
+            tracking = 2;
+          } else {
+            tracking = 0;
+          }
+        }
+      }
+
       if (features && features.length) {
+        //start tracking
         found = true;
+
         cb(features);
       } else {
         found = false;
@@ -102,6 +159,7 @@ function saveDetected(features) {
       var f = features[i];
       //draw on it
       im.ellipse(f.x + f.width/2, f.y + f.height/2, f.width/2, f.height/2);     
+      console.log(f);
     }
 
     var date = new Date();
