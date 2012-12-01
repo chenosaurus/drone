@@ -2,7 +2,9 @@ var arDrone = require('ar-drone'),
     fs      = require('fs'),
     cv      = require('opencv'),
     client  = arDrone.createClient(),
-    exec    = require('child_process').exec;
+    exec    = require('child_process').exec,
+    Firebase = require('./lib/firebase-node'),
+    snaps   = new Firebase('https://drone.firebaseio.com/snaps');
 
 var fly = true;
 
@@ -242,9 +244,11 @@ function saveDetected(features) {
 
     }
 
-    var date = new Date();
-    im.save("./detected/" + date.toString() + ".png");  
-    
+    var date = +(new Date());
+    var filename = "./detected/" + date + ".png";
+    im.save(filename);
+    snaps.push({file: filename});
+
     client.animateLeds("blinkOrange", 5, 2);
   });
 }
