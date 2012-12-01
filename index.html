@@ -5,27 +5,57 @@
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <title>Drone Games</title>
     <script type="text/javascript" src="https://static.firebase.com/v0/firebase.js"></script>
-    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
+    <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'>
+    </script>
+    <script type="text/javascript" src="/bootstrap.min.js"></script>
 
     <script>
       $(function() {
         var snaps = new Firebase('https://drone.firebaseio.com/snaps'),
-            snapshotFrame = $('#snapshotFrame');
+            images = $('#images');
 
         snaps.on('child_added', function (snapshot) {
-          console.log(snapshot.val().file.slice(2));
-          snapshotFrame.prop('src', snapshot.val().file.slice(1));
+          var newImage = $("<img>").attr('src', snapshot.val().file.slice(1));
+          images.prepend(newImage);
         })
       })
     </script>
 
-    <link rel="stylesheet" type="text/css" href="/css/layout.css"/>
+    <style>
+      #images {
+        height: 470px;
+        overflow: hidden;
+      }
+      #images img {
+        width: 10%;
+      }
 
+      #images img:first-child {
+        width: 100%;
+        height: 400px;
+        display:block;
+        margin-bottom: 8px;
+      }
 
+      #images
+    </style>
+    <link rel="stylesheet" type="text/css" href="/bootstrap.min.css"/>
   </head>
+
   <body>
-    <h2>FIST DETECTION</h2>
-    <div class="detected"></div>
-    <img id="snapshotFrame" src=""/>
+    <div class="container">
+    <div class="row">
+      <div class="span8 offset2">
+        <h2>FIST DETECTION</h2>
+        <div id="images">
+          <img src="/detected/testpattern.png"/>
+        </div>
+
+        <div class="detected">
+        </div>
+      </div>
+    </div>
+    </div>
+
   </body>
 </html>
