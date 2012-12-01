@@ -8,15 +8,24 @@
     <script type='text/javascript' src='https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js'></script>
 
     <script>
-      var snaps = new Firebase('https://drone.firebaseio.com/snaps');
+      $(function() {
+        var snaps = new Firebase('https://drone.firebaseio.com/snaps'),
+            snapshotFrame = $('#snapshotFrame');
+
+        snaps.on('child_added', function (snapshot) {
+          console.log(snapshot.val().file.slice(2));
+          snapshotFrame.prop('src', snapshot.val().file.slice(1));
+        })
+      })
     </script>
+
     <link rel="stylesheet" type="text/css" href="/css/layout.css"/>
 
 
   </head>
   <body>
-
+    <h2>FIST DETECTION</h2>
     <div class="detected"></div>
-
+    <img id="snapshotFrame" src=""/>
   </body>
 </html>
