@@ -18,7 +18,7 @@ if (fly) {
 
 setTimeout(function() {
   takeoffSuccess();
-}, 3000);
+}, 5000);
 
 setTimeout(function() {
   land();
@@ -37,18 +37,25 @@ function takeoffSuccess() {
   }, 500);
 
   setTimeout(function() {
-    startSteps();
-  }, 2000);
+    start();
+  }, 1500);
 }
 
-function startSteps() {
+function start() {
 
   if (fly) {
     client.stop();
   }
 
   setInterval(function() {
-    step();
+  
+    detect(saveDetected);
+    saveImage();
+
+  }, 1000);
+
+  setInterval(function() {
+    track();
   }, 1000);
 }
 
@@ -56,44 +63,38 @@ function land() {
   client.land();
 }
 
+///TRACKING 
+// call tracking every 500 ms, rotate if tracked obj is found
 
-function step() {
-  if (!found && fly) {
-    //client.clockwise(0.2);
-  }
+function track() {
 
   if (found) {
-    console.log('tracking');
+      console.log('tracking');
 
-    client.animateLeds("blinkGreen", 5, 1);
-    if (tracking == 1) {
-      console.log('left');
-      client.counterClockwise(0.2);
+      client.animateLeds("blinkGreen", 3, 1);
 
-    } else if (tracking == 2) {
-      console.log('right');
-      client.clockwise(0.2);
-    } else {
-      console.log('centered');
+      if (tracking == 1) {
+
+        console.log('left');
+        client.counterClockwise(0.2);
+
+      } else if (tracking == 2) {
+
+        console.log('right');
+        client.clockwise(0.2);
+
+      } else {
+
+        console.log('centered');
+
+      }
+
+      setTimeout(function() {
+        client.stop();
+      }, 800);
     }
 
-    setTimeout(function() {
-      client.stop();
-    }, 700);
-  }
-
-  setTimeout(function() {
-
-    if (!tracking) {    
-      client.stop();
-    }
-
-    detect(saveDetected);
-    saveImage();
-
-  }, 1000);
 }
-
 
 
 // //client.animateLeds("blinkOrange", 5, 2);
@@ -121,7 +122,15 @@ function detect(cb) {
      
       var features = JSON.parse(stdout);
       
-      //make sure features are big
+      var falsePos = false;
+      //make sure features are big and only 1
+
+      console.log('found ' + features.length + ' features');
+      if (features.length > 1) {
+        falsePos = true;
+        tracking = 0;
+      }
+
       for (var i = features.length - 1; i >=0; i--) {
 
         var f = features[i];
@@ -130,9 +139,9 @@ function detect(cb) {
           features.splice(i, 1);
         } else {
 
-          if (f.x < 180) {
+          if (f.x < 200) {
             tracking = 1;
-          } else if (f.x > 360) {
+          } else if (f.x > 300) {
             tracking = 2;
           } else {
             tracking = 0;
@@ -140,7 +149,7 @@ function detect(cb) {
         }
       }
 
-      if (features && features.length) {
+      if (features && features.length && !falsePos) {
         //start tracking
         found = true;
 
