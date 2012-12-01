@@ -48,7 +48,7 @@ function takeoffSuccess() {
 
   setTimeout(function() {
     start();
-  }, 2000);
+  }, 1200);
 }
 
 
@@ -87,12 +87,22 @@ function track() {
       if (tracking == 1) {
 
         console.log('left');
+        client.counterClockwise(0.4);
+
+      } else if (tracking = 3) {
+
+        console.log('hard left');
         client.counterClockwise(0.7);
 
+      } else if (tracking = 4) {
+
+        console.log('hard right');
+        client.clockwise(0.7);
+       
       } else if (tracking == 2) {
 
         console.log('right');
-        client.clockwise(0.7);
+        client.clockwise(0.4);
 
       } else {
 
@@ -175,8 +185,12 @@ function detect() {
           features.splice(i, 1);
         } else {
 
-          if (f.x < 230) {
+          if (f.x < 190) {
+            tracking = 3;
+          } else if (f.x < 230) {
             tracking = 1;
+          } else if (f.x > 440) {
+            tracking = 4;
           } else if (f.x > 410) {
             tracking = 2;
           } else {
@@ -210,6 +224,11 @@ function detect() {
 
      
   });
+}
+
+function reset() {
+  tracking = 0;
+  vTracking = 0;
 }
 
 function saveDetected(features) {
