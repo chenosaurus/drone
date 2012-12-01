@@ -12,16 +12,40 @@
     <script>
       $(function() {
         var snaps = new Firebase('https://drone.firebaseio.com/snaps'),
-            images = $('#images');
+            images = $('#images'),
+            header = $('h1'),
+            heading = {
+              0: '↔',
+              1: '←',
+              2: '→',
+              3: '←',
+              4: '→'
+            };
 
-        snaps.on('child_added', function (snapshot) {
-          var newImage = $("<img>").attr('src', snapshot.val().file.slice(1));
+        snaps.on('child_added', function (data) {
+          var snapshot = data.val();
+          var newImage = $("<img>").attr('src', snapshot.file.slice(1));
           images.prepend(newImage);
+          if (snapshot.tracking) {
+            console.log('tracking', snapshot.tracking);
+            var direction = dir[snapshot.tracking];
+            header.find('span').html(direction);
+          }
         })
       })
     </script>
 
     <style>
+      h1 {
+        text-align: center;
+      }
+
+      h1 span {
+        color: black;
+        font-size: 53px;
+        line-height: 46px;
+      }
+
       #images {
         height: 556px;
         overflow: hidden;
@@ -36,8 +60,6 @@
         display:block;
         margin-bottom: 8px;
       }
-
-      #images
     </style>
     <link rel="stylesheet" type="text/css" href="/bootstrap.min.css"/>
   </head>
@@ -46,7 +68,11 @@
     <div class="container">
     <div class="row">
       <div class="span8 offset2">
-        <h2>FIST DETECTION</h2>
+        <h1>
+          <embed id="fist" src="noun_project_6593.svg" st type="image/svg+xml" />
+          <span>FIST DETECTOR</span>
+          <span></span>
+        </h1>
         <div id="images">
           <img src="/detected/testpattern.png"/>
         </div>
